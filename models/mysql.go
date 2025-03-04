@@ -26,8 +26,11 @@ func InitDataBase() error {
 	sqlDB.SetConnMaxLifetime(time.Hour)
 	log.Println("open db success")
 
+	log.Println("数据库迁移开始")
 	Db.AutoMigrate(&User{})
 	Db.AutoMigrate(&Scene{})
 	Db.AutoMigrate(&Score{})
+	log.Println("数据库迁移完成")
+
 	return nil
 }
