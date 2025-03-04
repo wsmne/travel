@@ -7,14 +7,16 @@ import (
 	"time"
 )
 
+var Db *gorm.DB
+
 func InitDataBase() error {
-	dsn := "root:wsm1201..@tcp(127.0.0.1:3306)/kratos_try?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:@tcp(127.0.0.1:3306)/travel?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Println("open db error ,err = %v" + err.Error())
 		panic("db creat error")
 	}
-	Db := db
+	Db = db
 	sqlDB, _ := Db.DB()
 	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
 	sqlDB.SetMaxIdleConns(50)
@@ -22,5 +24,10 @@ func InitDataBase() error {
 	sqlDB.SetMaxOpenConns(50)
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(time.Hour)
+	log.Println("open db success")
+
+	Db.AutoMigrate(&User{})
+	Db.AutoMigrate(&Scene{})
+	Db.AutoMigrate(&Score{})
 	return nil
 }

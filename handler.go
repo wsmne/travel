@@ -14,7 +14,7 @@ func RegisterRouter(r *gin.Engine) {
 		},
 		)
 	})
-	r.POST("/user", controllers.Regist)
+	r.POST("/user", controllers.Register)
 	r.GET("/login", controllers.Login)
 	r.Use(middleware.ParseToken)
 	r.PUT("/user", controllers.UpdateUser)
