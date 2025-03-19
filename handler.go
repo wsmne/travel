@@ -14,9 +14,12 @@ func RegisterRouter(r *gin.Engine) {
 		},
 		)
 	})
-	r.POST("/user", controllers.Register)
+	r.POST("/regist", controllers.Register)
 	r.GET("/login", controllers.Login)
-	r.Use(middleware.ParseToken)
-	r.PUT("/user", controllers.UpdateUser)
+
+	auth := r.Group("/api", middleware.JWTMiddleware())
+	{
+		auth.PUT("/user", controllers.UpdateUser)
+	}
 
 }
