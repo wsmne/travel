@@ -5,24 +5,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"strings"
 	"time"
 )
 
 type Claims struct {
-	UserID string `json:"user_id"`
+	UID string `json:"uid"`
 	jwt.RegisteredClaims
 }
 
 var jwtKey = []byte("wsm_graduation_project")
 
-func GenerateJWT(userID string) (string, error) {
+func GenerateJWT(UID string) (string, error) {
 	// 设置过期时间
 	expirationTime := time.Now().Add(12 * time.Hour)
 
 	// 创建 JWT Claims
 	claims := &Claims{
-		UserID: userID,
+		UID: UID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
@@ -72,16 +71,16 @@ func JWTMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 按空格分割 "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token 格式无效"})
-			c.Abort()
-			return
-		}
+		//// 按空格分割 "Bearer <token>"
+		//parts := strings.Split(authHeader, " ")
+		//if len(parts) != 2 || parts[0] != "Bearer" {
+		//	c.JSON(http.StatusUnauthorized, gin.H{"error": "Token 格式无效"})
+		//	c.Abort()
+		//	return
+		//}
 
 		// 解析 JWT
-		claims, err := ParseJWT(parts[1])
+		claims, err := ParseJWT(authHeader)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token 无效或已过期"})
 			c.Abort()
@@ -89,7 +88,7 @@ func JWTMiddleware() gin.HandlerFunc {
 		}
 
 		// 将解析出的用户名存入上下文
-		c.Set("userID", claims.UserID)
+		c.Set("uid", claims.UID)
 		c.Next()
 	}
 }
