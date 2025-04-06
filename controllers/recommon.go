@@ -21,6 +21,9 @@ func UserFilterRecommend(ctx *gin.Context) {
 	result := recommendScenesByUser(cast.ToUint(userId), 2)
 	ctx.JSON(200, result)
 }
+func Recommend(ctx *gin.Context) {
+
+}
 
 func buildRatingMatrix() map[uint]map[uint]float64 {
 	var scores []models.Score

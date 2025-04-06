@@ -20,6 +20,12 @@ func RegisterRouter(r *gin.Engine) {
 	auth := r.Group("/api", middleware.JWTMiddleware())
 	{
 		auth.PUT("/user", controllers.UpdateUser)
+		auth.GET("/recommend", controllers.Recommend)
+		auth.GET("/guessULike", controllers.UserFilterRecommend)
+		auth.GET("/mostgoods", controllers.MostGoods)
+		auth.GET("/mostviews", controllers.MostViews)
+		auth.POST("/score", controllers.AddScore)
+		auth.POST("/scene/cnt", controllers.Add1)
 	}
 
 }
