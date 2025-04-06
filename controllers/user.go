@@ -59,7 +59,7 @@ func Login(ctx *gin.Context) {
 		})
 		return
 	}
-	token, _ := middleware.GenerateJWT(login.UID)
+	token, _ := middleware.GenerateJWT(login.ID)
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"data": gin.H{

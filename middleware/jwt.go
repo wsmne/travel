@@ -9,19 +9,19 @@ import (
 )
 
 type Claims struct {
-	UID string `json:"uid"`
+	ID uint `json:"id"`
 	jwt.RegisteredClaims
 }
 
 var jwtKey = []byte("wsm_graduation_project")
 
-func GenerateJWT(UID string) (string, error) {
+func GenerateJWT(ID uint) (string, error) {
 	// 设置过期时间
 	expirationTime := time.Now().Add(12 * time.Hour)
 
 	// 创建 JWT Claims
 	claims := &Claims{
-		UID: UID,
+		ID: ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
@@ -88,7 +88,7 @@ func JWTMiddleware() gin.HandlerFunc {
 		}
 
 		// 将解析出的用户名存入上下文
-		c.Set("uid", claims.UID)
+		c.Set("userid", claims.ID)
 		c.Next()
 	}
 }
