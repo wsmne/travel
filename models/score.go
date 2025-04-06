@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -14,8 +13,4 @@ type Score struct {
 	ScoreTime  string  `gorm:"not null" json:"score_time"`
 	ScoreDesc  string  `json:"score_desc"`
 	ScoreState int     `json:"score_state"`
-}
-
-func GetScoreByUserId(c *gin.Context) {
-
 }

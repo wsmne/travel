@@ -44,7 +44,7 @@ func Login(ctx *gin.Context) {
 		})
 		return
 	}
-	login, err := models.GetUserByUID(user.UID)
+	login, err := models.GetUserByUID(user.UserName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": 15004,
