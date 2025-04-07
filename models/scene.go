@@ -30,3 +30,21 @@ func UpdateScene(scene *Scene) (*Scene, error) {
 	}
 	return scene, nil
 }
+
+func GetTopKScenesByViews(k int) ([]Scene, error) {
+	var scenes []Scene
+	err := Db.Order("views DESC").Limit(k).Find(&scenes).Error
+	if err != nil {
+		return nil, err
+	}
+	return scenes, nil
+}
+
+func GetTopKScenesByGoods(k int) ([]Scene, error) {
+	var scenes []Scene
+	err := Db.Order("goods DESC").Limit(k).Find(&scenes).Error
+	if err != nil {
+		return nil, err
+	}
+	return scenes, nil
+}

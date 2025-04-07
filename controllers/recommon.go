@@ -4,16 +4,25 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"math"
+	"net/http"
 	"proj/travel/models"
 	"sort"
 )
 
-func MostViews(ctx *gin.Context) {
-
+func MostViews(c *gin.Context) {
+	result, err := models.GetTopKScenesByViews(10)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load scenes from db"})
+	}
+	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
-func MostGoods(ctx *gin.Context) {
-
+func MostGoods(c *gin.Context) {
+	result, err := models.GetTopKScenesByGoods(10)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load scenes from db"})
+	}
+	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
 func UserFilterRecommend(ctx *gin.Context) {
