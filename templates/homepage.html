@@ -1,0 +1,51 @@
+<!-- templates/homepage.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景点推荐系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .scene-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .scene-list li {
+            background-color: #fff;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .scene-list li h3 {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>景点推荐</h1>
+
+<ul class="scene-list">
+    {{range .scenes}}
+    <li>
+        <h3>{{.Name}}</h3>
+        <p>城市: {{.City}}</p>
+        <p>浏览: {{.Views}} | 点赞: {{.Goods}}</p>
+    </li>
+    {{end}}
+</ul>
+
+</body>
+</html>

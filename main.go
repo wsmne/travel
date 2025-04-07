@@ -10,7 +10,8 @@ func main() {
 	models.InitDataBase()
 
 	r := gin.Default()
-
+	r.LoadHTMLGlob("templates/*") // 加载 templates 目录下的 HTML 页面
+	r.Static("/static", "./static")
 	RegisterRouter(r)
 
 	r.Run(":5001")
