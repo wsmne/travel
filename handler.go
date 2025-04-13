@@ -8,20 +8,23 @@ import (
 
 func RegisterRouter(r *gin.Engine) {
 	r.GET("/firstpage", controllers.FirstPage)
-
-	// homepage: 景点推荐页面
 	r.GET("/homepage", controllers.HomePage)
+	r.GET("/detail", controllers.DetailPage)
 
 	// 注册和登录 POST 请求
 	r.POST("/register", controllers.Register)
-	r.GET("/login", controllers.Login)
+	r.POST("/login", controllers.Login)
 
 	// 保护的路由组，带有 JWT 中间件
 	auth := r.Group("/api", middleware.JWTMiddleware())
 	{
-		auth.GET("/recommend", controllers.Recommend)
-		auth.GET("/mostviews", controllers.MostViews)
-		auth.GET("/mostgoods", controllers.MostGoods)
+		auth.GET("/scene", controllers.GetScenesByType)
+		auth.GET("/scene/:id", controllers.GetSceneByID)
+		auth.POST("/score", controllers.AddScore)
+		//auth.GET("/recommend", controllers.Recommend)
+		//auth.GET("/mostviews", controllers.MostViews)
+		//auth.GET("/mostgoods", controllers.MostGoods)
+		//auth.GET("/guessulike", controllers.UserFilterRecommend)
 	}
 
 	//r.POST("/register", controllers.Register)

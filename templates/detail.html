@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>景点详情</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            max-width: 800px;
+            margin: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .card img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-content h2 {
+            margin-bottom: 10px;
+        }
+
+        .card-content p {
+            margin: 8px 0;
+        }
+
+        .rating {
+            background: #f39c12;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 40px;
+            margin-top: 20px;
+        }
+
+        .star {
+            color: #ddd;
+            transition: color 0.2s;
+        }
+
+        .star.active {
+            color: #f39c12;
+        }
+
+        .submit-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #1abc9c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background-color: #16a085;
+        }
+
+        .back-button {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .back-button:hover {
+            background-color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 返回按钮 -->
+<button class="back-button" onclick="window.location.href='/homepage'">返回首页</button>
+
+<div class="card" id="detail-card">
+    <!-- 景点详情数据将通过 JS 注入 -->
+</div>
+
+<script>
+    let currentRating = 0; // 当前评分
+    let sceneId = 0;       // 当前景点ID
+
+    async function loadDetail() {
+        const params = new URLSearchParams(window.location.search);
+        sceneId = params.get('id');
+
+        if (!sceneId) {
+            alert("缺少景点ID");
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`/api/scene/${sceneId}`, {
+                headers: {
+                    'Authorization': `${token}`
+                }
+            });
+            const data = await res.json();
+
+            if (data.code !== 0) {
+                alert("获取景点详情失败");
+                return;
+            }
+
+            const scene = data.scene;
+            const score = data.score;
+            currentRating = score ? score.score : 0;
+
+            document.getElementById('detail-card').innerHTML = `
+                <img src="${scene.image}" alt="${scene.name}">
+                <div class="card-content">
+                    <h2>${scene.name}</h2>
+                    <p><strong>省份：</strong>${scene.province}</p>
+                    <p><strong>城市：</strong>${scene.city}</p>
+                    <p><strong>价格：</strong>${scene.price}</p>
+                    <p><strong>浏览量：</strong>${scene.views}</p>
+                    <p><strong>点赞数：</strong>${scene.goods}</p>
+                    ${score ? `<div class="rating">你的评分：${score.score}</div>` : `<p style="color:#888;">你还未评分</p>`}
+                    <div class="stars" id="stars-container"></div>
+                    <button class="submit-btn" onclick="submitRating()">提交评分</button>
+                </div>
+            `;
+
+            renderStars(currentRating); // 显示评分星星
+            bindStars(); // 添加点击事件
+
+        } catch (err) {
+            alert("网络异常，无法加载详情");
+        }
+    }
+
+    function renderStars(rating) {
+        const starsContainer = document.getElementById('stars-container');
+        starsContainer.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('span');
+            star.className = 'star';
+            star.innerHTML = '★';
+            star.dataset.index = i;
+            if (i <= rating) {
+                star.classList.add('active');
+            }
+            starsContainer.appendChild(star);
+        }
+    }
+
+    function bindStars() {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const val = parseInt(star.dataset.index);
+                currentRating = val;
+                renderStars(currentRating);
+                bindStars(); // 重新绑定事件（每次渲染后都需要）
+            });
+        });
+    }
+
+    async function submitRating() {
+        if (currentRating === 0) {
+            alert('请先选择评分');
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        const rating = {
+            score: currentRating,
+            score_type: 1,
+            scene_id: parseInt(sceneId)
+        };
+
+        try {
+            const res = await fetch(`/api/score`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(rating)
+            });
+            const data = await res.json();
+
+            if (data.code === 0) {
+                alert("评分成功！");
+                loadDetail(); // 刷新数据并重新显示评分星星
+            } else {
+                alert("评分失败：" + data.msg);
+            }
+        } catch (err) {
+            alert("网络异常，评分失败");
+        }
+    }
+
+    loadDetail();
+</script>
+
+</body>
+</html>

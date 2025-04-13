@@ -9,8 +9,20 @@ import (
 )
 
 func Register(ctx *gin.Context) {
+	//body, err := io.ReadAll(ctx.Request.Body)
+	//if err != nil {
+	//	ctx.JSON(http.StatusInternalServerError, gin.H{
+	//		"code": 15006,
+	//		"msg":  "读取请求体失败",
+	//	})
+	//	return
+	//}
+	//fmt.Println(string(body)) // 打印请求体，查看是否是有效的 JSON 数据
+	//
+	//ctx.Request.Body = io.NopCloser(bytes.NewReader(body))
+
 	var user models.User
-	err := ctx.BindJSON(&user)
+	err := ctx.ShouldBindJSON(&user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": 15003,
@@ -23,12 +35,12 @@ func Register(ctx *gin.Context) {
 		log.Println("创建用户错误，err : " + err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": 15002,
-			"msg":  "创建失败",
+			"msg":  "用户名已存在",
 		})
 		return
 	}
 	ctx.JSON(200, gin.H{
-		"code": 0,
+		"code": 200,
 		"msg":  "创建成功",
 	})
 	return
@@ -36,7 +48,7 @@ func Register(ctx *gin.Context) {
 
 func Login(ctx *gin.Context) {
 	var user models.User
-	err := ctx.BindJSON(&user)
+	err := ctx.ShouldBindJSON(&user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": 15003,
@@ -44,7 +56,7 @@ func Login(ctx *gin.Context) {
 		})
 		return
 	}
-	login, err := models.GetUserByUID(user.UserName)
+	login, err := models.GetUserByUserName(user.UserName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": 15004,
@@ -61,11 +73,9 @@ func Login(ctx *gin.Context) {
 	}
 	token, _ := middleware.GenerateJWT(login.ID)
 	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"data": gin.H{
-			"token": token,
-		},
-		"msg": "登录成功",
+		"code":  0,
+		"msg":   "登录成功",
+		"token": token,
 	})
 	return
 }

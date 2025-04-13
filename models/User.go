@@ -4,12 +4,12 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	UserName string `gorm:"type:varchar(20);not null unique" json:"username"`
+	UserName string `gorm:"type:varchar(20);not null;unique" json:"username"`
 	UserPW   string `gorm:"type:varchar(20);not null" json:"password"`
 }
 
-func GetUserByUID(uid string) (user User, err error) {
-	err = Db.Debug().Where("uid = ?", uid).First(&user).Error
+func GetUserByUserName(userName string) (user User, err error) {
+	err = Db.Debug().Where("user_name = ?", userName).First(&user).Error
 	return user, err
 }
 

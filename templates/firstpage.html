@@ -107,9 +107,9 @@
 <!-- 注册表单 -->
 <div id="registerForm" class="form-container" style="display: none;">
     <h3>注册</h3>
-    <form action="/register" method="post">
-        <input type="text" name="username" placeholder="用户名" required />
-        <input type="password" name="password" placeholder="密码" required />
+    <form id="register-form">
+        <input type="text" id="register-username" placeholder="用户名" required />
+        <input type="password" id="register-password" placeholder="密码" required />
         <button type="submit">注册</button>
     </form>
 </div>
@@ -117,12 +117,13 @@
 <!-- 登录表单 -->
 <div id="loginForm" class="form-container" style="display: none;">
     <h3>登录</h3>
-    <form action="/login" method="post">
-        <input type="text" name="username" placeholder="用户名" required />
-        <input type="password" name="password" placeholder="密码" required />
+    <form id="login-form">
+        <input type="text" id="login-username" placeholder="用户名" required />
+        <input type="password" id="login-password" placeholder="密码" required />
         <button type="submit">登录</button>
     </form>
 </div>
+
 
 <script>
     // 切换Tab显示
@@ -136,11 +137,82 @@
         }
     }
 
-    // 默认显示注册Tab
-    window.onload = function() {
-        switchTab('register');
-    }
+    window.onload = function () {
+        switchTab('login');
+    };
+
+    // 注册请求处理
+    document.getElementById('register-form').addEventListener('submit', async function (e) {
+        e.preventDefault();  // 阻止默认提交行为
+        const form = e.target;
+
+        // 获取表单数据并构建JSON对象
+        const data = {
+            username: document.getElementById('register-username').value,
+            password: document.getElementById('register-password').value
+        };
+
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',  // 确保 Content-Type 为 application/json
+                },
+                body: JSON.stringify(data)  // 将数据转换为JSON格式
+            });
+
+            const result = await response.json();
+            alert(result.msg);
+
+            if (response.ok) {
+                form.reset();
+            }
+        } catch (err) {
+            alert('请求失败，请检查网络连接');
+        }
+    });
+
+    // 登录请求处理
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
+        e.preventDefault();  // 阻止默认提交行为
+        const form = e.target;
+
+        // 获取表单数据并构建JSON对象
+        const data = {
+            username: document.getElementById('login-username').value,
+            password: document.getElementById('login-password').value
+        };
+        console.log('Login Data:', data);  // 打印数据，确保这里不是空的
+
+
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',  // 确保 Content-Type 为 application/json
+                },
+                body: JSON.stringify(data)  // 将数据转换为JSON格式
+            });
+
+            const result = await response.json();
+            console.log('Login response:', result); // 调试用
+
+            alert(result.msg);
+
+            if (result.code === 0 && result.token) {
+                localStorage.setItem("token", result.token); // 保存 token
+                window.location.href = "/homepage"; // 页面跳转
+            }else {
+                form.reset();
+            }
+        } catch (err) {
+            alert('请求失败，请检查网络连接');
+        }
+    });
+
 </script>
+
+
 
 </body>
 </html>

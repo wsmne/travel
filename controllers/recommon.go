@@ -1,34 +1,37 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"math"
-	"net/http"
 	"proj/travel/models"
 	"sort"
 )
 
-func MostViews(c *gin.Context) {
+func MostViews(c *gin.Context) ([]models.Scene, error) {
 	result, err := models.GetTopKScenesByViews(10)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load scenes from db"})
+		return nil, fmt.Errorf("加载失败")
 	}
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	return result, nil
 }
 
-func MostGoods(c *gin.Context) {
+func MostGoods(c *gin.Context) ([]models.Scene, error) {
 	result, err := models.GetTopKScenesByGoods(10)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load scenes from db"})
+		return nil, fmt.Errorf("加载失败")
 	}
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	return result, nil
 }
 
-func UserFilterRecommend(ctx *gin.Context) {
-	userId := ctx.Param("userid")
+func UserFilterRecommend(ctx *gin.Context) ([]models.Scene, error) {
+	userId, ok := ctx.Get("userid")
+	if !ok {
+		return nil, nil
+	}
 	result := recommendScenesByUser(cast.ToUint(userId), 2)
-	ctx.JSON(200, result)
+	return result, nil
 }
 func Recommend(ctx *gin.Context) {
 

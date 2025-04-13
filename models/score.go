@@ -25,3 +25,22 @@ func AddScore(rating Score) bool {
 	}
 	return true
 }
+
+func GetScoreByUserAndSceneId(userID uint, scoreID uint) *Score {
+	var score Score
+
+	err := Db.Where("user_id = ? AND scene_id = ?", userID, scoreID).First(&score).Error
+
+	if err != nil {
+		return nil
+	}
+	return &score
+
+}
+
+func UpdateScore(score *Score) (*Score, error) {
+	if err := Db.Save(score).Error; err != nil {
+		return nil, err
+	}
+	return score, nil
+}
