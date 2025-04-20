@@ -172,7 +172,6 @@
             });
             const d = await res.json();
             if (d.code === 0) {
-                alert('评分成功');
                 document.getElementById('rating-display').textContent = `你的评分：${currentRating}`;
             } else alert('评分失败：' + d.msg);
         } catch {
