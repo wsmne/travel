@@ -18,7 +18,7 @@ func CreateUser(user User) error {
 	return err
 }
 
-func GetUserByName(name string) (user User, err error) {
-	err = Db.Debug().Where("user_name = ?", name).First(&user).Error
+func GetUserById(id uint) (user *User, err error) {
+	err = Db.Debug().Where("id = ?", id).First(&user).Error
 	return user, err
 }

@@ -18,6 +18,7 @@ func RegisterRouter(r *gin.Engine) {
 	// 保护的路由组，带有 JWT 中间件
 	auth := r.Group("/api", middleware.JWTMiddleware())
 	{
+		auth.GET("/userinfo", controllers.GetUserInfo)
 		auth.GET("/scene", controllers.GetScenesByType)
 		auth.GET("/scene/:id", controllers.GetSceneByID)
 		auth.POST("/score", controllers.AddScore)

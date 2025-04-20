@@ -20,12 +20,25 @@
             height: 100vh;
         }
 
-        /* 左侧 Tab 栏 */
         .sidebar {
             width: 20%;
             background-color: #2c3e50;
             color: white;
-            padding: 30px 10px;
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .user-info img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
         }
 
         .tab {
@@ -41,7 +54,34 @@
             background-color: #1abc9c;
         }
 
-        /* 中间内容区域 */
+        .filter-inputs {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .filter-inputs input {
+            margin: 5px 0;
+            padding: 6px;
+            width: 80%;
+            border-radius: 4px;
+            border: none;
+        }
+
+        .filter-inputs button {
+            margin-top: 8px;
+            padding: 6px;
+            width: 80%;
+            border-radius: 4px;
+            border: none;
+            background-color: #1abc9c;
+            color: white;
+            cursor: pointer;
+        }
+
+        .filter-inputs button:hover {
+            background-color: #16a085;
+        }
+
         .main-content {
             width: 80%;
             padding: 20px;
@@ -84,20 +124,31 @@
 <body>
 
 <div class="container">
-    <!-- 左侧标签栏 -->
+    <!-- 左侧区域 -->
     <div class="sidebar">
+        <!-- 用户信息 -->
+        <div class="user-info">
+            <img src="/static/default-avatar.jpg" alt="用户头像">
+            <div id="username">加载中...</div>
+        </div>
+
+        <!-- tab 栏 -->
         <div class="tab active" onclick="switchTab('hot')">今日热门</div>
         <div class="tab" onclick="switchTab('likes')">最多点赞</div>
         <div class="tab" onclick="switchTab('views')">最多浏览</div>
         <div class="tab" onclick="switchTab('guess')">猜你喜欢</div>
-        <div class="tab" onclick="switchTab('recommend')">为你推荐</div>
+
+        <!-- 输入框筛选 -->
+        <div class="filter-inputs">
+            <input type="text" id="city-input" placeholder="输入城市名">
+            <input type="text" id="scene-input" placeholder="输入景点名">
+            <button onclick="searchByInput()">搜索</button>
+        </div>
     </div>
 
-    <!-- 右侧内容区域 -->
+    <!-- 主体内容 -->
     <div class="main-content">
-        <div class="grid" id="card-container">
-            <!-- 景点卡片将通过 JS 注入 -->
-        </div>
+        <div class="grid" id="card-container"></div>
     </div>
 </div>
 
@@ -106,24 +157,27 @@
     const cardContainer = document.getElementById('card-container');
 
     const tabTypeMap = {
-        'hot': 'hot',           // 今日热门
-        'likes': 'likes',       // 最多点赞
-        'views': 'views',       // 最多浏览
-        'guess': 'guess',       // 猜你喜欢
-        'recommend': 'recommend' // 为你推荐
+        'hot': 'hot',
+        'likes': 'likes',
+        'views': 'views',
+        'guess': 'guess',
+        'recommend': 'recommend'
     };
+
+    let currentTab = 'hot';
 
     function switchTab(type) {
         tabs.forEach(t => t.classList.remove('active'));
         event.target.classList.add('active');
-
-        fetchScenes(tabTypeMap[type]);
+        currentTab = type;
+        fetchScenes(type);  // 不带过滤
     }
 
-    async function fetchScenes(type) {
+    async function fetchScenes(type, city = '', scene = '') {
         try {
-            const token = localStorage.getItem('token'); // 获取 JWT（前面登录成功时应保存）
-            const response = await fetch(`/api/scene?type=${type}`, {
+            const token = localStorage.getItem('token');
+            const url = `/api/scene?type=${type}&city=${city}&name=${scene}`;
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `${token}`
                 }
@@ -141,23 +195,40 @@
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
-            <img src="${item.image}" alt="${item.name}">
-            <h3>${item.name}</h3>
-        `;
-            // 点击卡片跳转详情页
+                <img src="${item.image}" alt="${item.name}">
+                <h3>${item.name}</h3>
+            `;
             card.onclick = () => {
-                window.location.href = `/detail?id=${item.ID}`; // 注意是大写 ID
+                window.location.href = `/detail?id=${item.ID}`;
             };
             cardContainer.appendChild(card);
         });
     }
 
-    // 初始加载“今日热门”
+    async function fetchUserInfo() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/userinfo', {
+                headers: { 'Authorization': `${token}` }
+            });
+            const data = await response.json();
+            document.getElementById('username').textContent = data.user_name;
+        } catch {
+            document.getElementById('username').textContent = '未登录';
+        }
+    }
+
+    function searchByInput() {
+        const city = document.getElementById('city-input').value.trim();
+        const scene = document.getElementById('scene-input').value.trim();
+        fetchScenes(currentTab, city, scene);
+    }
+
     window.onload = () => {
-        fetchScenes('hot');
+        fetchUserInfo();
+        fetchScenes(currentTab);
     };
 </script>
-
 
 </body>
 </html>

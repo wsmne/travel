@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"log"
 	"net/http"
 	"proj/travel/middleware"
@@ -87,4 +88,25 @@ func UpdateUser(ctx *gin.Context) {
 		"code": 0,
 	})
 	return
+}
+
+func GetUserInfo(c *gin.Context) {
+	userid, ok := c.Get("userid")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"code": 401,
+			"msg":  "用户未认证",
+		})
+		return
+	}
+
+	user, err := models.GetUserById(cast.ToUint(userid))
+	if user == nil || err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "用户不存在"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user_name": user.UserName,
+	})
 }

@@ -5,6 +5,8 @@ import (
 	"github.com/spf13/cast"
 	"net/http"
 	"proj/travel/models"
+	"strings"
+	"time"
 )
 
 func Add1(c *gin.Context, sceneId uint, addtype, cnt int) {
@@ -17,6 +19,13 @@ func Add1(c *gin.Context, sceneId uint, addtype, cnt int) {
 		scene.Goods += cnt
 	} else {
 		scene.Views += cnt
+		userid, _ := c.Get("userid")
+		userId := cast.ToUint(userid)
+		models.AddUserLog(&models.ClickLog{
+			UserId:    userId,
+			SceneId:   0,
+			CreatedAt: time.Now(),
+		})
 	}
 	if _, err := models.UpdateScene(scene); err != nil {
 		return
@@ -25,7 +34,10 @@ func Add1(c *gin.Context, sceneId uint, addtype, cnt int) {
 }
 
 func GetScenesByType(c *gin.Context) {
-	sceneType := c.Query("type") // 获取 ?type=xxx 参数
+	sceneType := c.Query("type")
+	city := c.Query("city")
+	name := c.Query("name")
+
 	var scenes []models.Scene
 	var err error
 	switch sceneType {
@@ -46,7 +58,22 @@ func GetScenesByType(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
 	}
-	c.JSON(200, scenes)
+
+	// 对结果进行城市或名称筛选（模糊匹配，支持复合）
+	filtered := make([]models.Scene, 0)
+	for _, s := range scenes {
+		matchCity := city == "" || containsIgnoreCase(s.City, city)
+		matchName := name == "" || containsIgnoreCase(s.Name, name)
+		if matchCity && matchName {
+			filtered = append(filtered, s)
+		}
+	}
+
+	c.JSON(200, filtered)
+}
+
+func containsIgnoreCase(str, substr string) bool {
+	return strings.Contains(strings.ToLower(str), strings.ToLower(substr))
 }
 
 func GetSceneByID(ctx *gin.Context) {

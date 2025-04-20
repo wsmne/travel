@@ -18,7 +18,7 @@ func MostViews(c *gin.Context) ([]models.Scene, error) {
 }
 
 func MostGoods(c *gin.Context) ([]models.Scene, error) {
-	result, err := models.GetTopKScenesByGoods(10)
+	result, err := models.GetTopKScenesByGoods(100)
 	if err != nil {
 		return nil, fmt.Errorf("加载失败")
 	}
@@ -35,20 +35,6 @@ func UserFilterRecommend(ctx *gin.Context) ([]models.Scene, error) {
 }
 func Recommend(ctx *gin.Context) {
 
-}
-
-func buildRatingMatrix() map[uint]map[uint]float64 {
-	var scores []models.Score
-	models.Db.Find(&scores)
-
-	ratingMatrix := make(map[uint]map[uint]float64)
-	for _, s := range scores {
-		if _, ok := ratingMatrix[s.UserId]; !ok {
-			ratingMatrix[s.UserId] = make(map[uint]float64)
-		}
-		ratingMatrix[s.UserId][s.SceneId] = float64(s.Score)
-	}
-	return ratingMatrix
 }
 
 func pearsonSimilarity(a, b map[uint]float64) float64 {
@@ -144,7 +130,9 @@ type Prediction struct {
 }
 
 func recommendScenesByUser(userId uint, k int) []models.Scene {
-	ratings := buildRatingMatrix()
+	ratings := models.GetRatingMatrixFromRedis()
+	ratings[userId] = models.GetUserRealTimeRatingsWithClicks(userId)
+
 	topUsers := findTopKSimilarUsers(userId, ratings, k)
 	predicted := predictScores(userId, ratings, topUsers)
 
@@ -158,7 +146,7 @@ func recommendScenesByUser(userId uint, k int) []models.Scene {
 	})
 
 	// 获取推荐景点详细信息
-	recommendCount := 5
+	recommendCount := 100
 	if len(predictions) < recommendCount {
 		recommendCount = len(predictions)
 	}
@@ -170,5 +158,25 @@ func recommendScenesByUser(userId uint, k int) []models.Scene {
 
 	var scenes []models.Scene
 	models.Db.Where("id IN ?", sceneIds).Find(&scenes)
+
+	// 如果推荐的景点少于预期数量，从热门景点中补充
+	if len(scenes) < recommendCount {
+		// 获取热门景点的 ID
+		topScenes, err := models.GetTopKScenesByGoods(recommendCount - len(scenes))
+		if err != nil {
+			return scenes
+		}
+
+		// 将热门景点的 ID 加入到推荐列表中
+		for _, scene := range topScenes {
+			sceneIds = append(sceneIds, scene.ID)
+		}
+
+		// 获取热门景点的详细信息
+		var additionalScenes []models.Scene
+		models.Db.Where("id IN ?", sceneIds).Find(&additionalScenes)
+		scenes = append(scenes, additionalScenes...)
+	}
+
 	return scenes
 }
