@@ -23,7 +23,7 @@ func Add1(c *gin.Context, sceneId uint, addtype, cnt int) {
 		userId := cast.ToUint(userid)
 		models.AddUserLog(&models.ClickLog{
 			UserId:    userId,
-			SceneId:   0,
+			SceneId:   scene.ID,
 			CreatedAt: time.Now(),
 		})
 	}
