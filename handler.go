@@ -21,6 +21,7 @@ func RegisterRouter(r *gin.Engine) {
 		auth.GET("/scene", controllers.GetScenesByType)
 		auth.GET("/scene/:id", controllers.GetSceneByID)
 		auth.POST("/score", controllers.AddScore)
+		auth.POST("/score/like", controllers.AddLike)
 		//auth.GET("/recommend", controllers.Recommend)
 		//auth.GET("/mostviews", controllers.MostViews)
 		//auth.GET("/mostgoods", controllers.MostGoods)

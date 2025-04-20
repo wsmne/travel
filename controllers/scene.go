@@ -7,18 +7,16 @@ import (
 	"proj/travel/models"
 )
 
-func Add1(c *gin.Context, addtype int) {
-	sceneid := c.Param("id")
-	sceneId := cast.ToUint(sceneid)
+func Add1(c *gin.Context, sceneId uint, addtype, cnt int) {
 	scene, err := models.FindSceneByID(sceneId)
 	if err != nil {
 		return
 	}
 
 	if addtype == 1 {
-		scene.Goods++
+		scene.Goods += cnt
 	} else {
-		scene.Views++
+		scene.Views += cnt
 	}
 	if _, err := models.UpdateScene(scene); err != nil {
 		return
@@ -62,7 +60,7 @@ func GetSceneByID(ctx *gin.Context) {
 		})
 		return
 	}
-	Add1(ctx, 2)
+	Add1(ctx, sceneId, 2, 1)
 	userId := cast.ToUint(userid)
 	detail, err := models.FindSceneByID(sceneId)
 	if err != nil {

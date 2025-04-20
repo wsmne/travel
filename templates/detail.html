@@ -10,7 +10,6 @@
             margin: 0;
             padding: 30px;
         }
-
         .card {
             background: white;
             border-radius: 10px;
@@ -19,51 +18,43 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-
         .card img {
             width: 100%;
             height: 400px;
             object-fit: cover;
         }
-
         .card-content {
             padding: 20px;
         }
-
         .card-content h2 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 10px;
         }
-
-        .card-content p {
-            margin: 8px 0;
-        }
-
-        .rating {
-            background: #f39c12;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 5px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        .stars {
-            display: flex;
-            gap: 10px;
+        /* 点赞按钮 */
+        .like-button {
             cursor: pointer;
-            font-size: 40px;
-            margin-top: 20px;
+            font-size: 30px;
+            color: #000; /* 默认黑色 */
+            transition: color 0.3s;
         }
-
+        .like-button.liked {
+            color: #e74c3c; /* 点赞后红色 */
+        }
+        /* 星星评分 */
+        .stars {
+            margin-top: 15px;
+            font-size: 32px;
+        }
         .star {
-            color: #ddd;
+            cursor: pointer;
+            color: #ccc; /* 默认灰色 */
             transition: color 0.2s;
         }
-
         .star.active {
-            color: #f39c12;
+            color: #f39c12; /* 选中时黄色 */
         }
-
         .submit-btn {
             margin-top: 20px;
             padding: 10px 20px;
@@ -73,11 +64,9 @@
             border-radius: 5px;
             cursor: pointer;
         }
-
         .submit-btn:hover {
             background-color: #16a085;
         }
-
         .back-button {
             background-color: #ecf0f1;
             color: #2c3e50;
@@ -87,7 +76,6 @@
             cursor: pointer;
             margin-bottom: 20px;
         }
-
         .back-button:hover {
             background-color: #bdc3c7;
         }
@@ -95,126 +83,127 @@
 </head>
 <body>
 
-<!-- 返回按钮 -->
 <button class="back-button" onclick="window.location.href='/homepage'">返回首页</button>
 
-<div class="card" id="detail-card">
-    <!-- 景点详情数据将通过 JS 注入 -->
-</div>
+<div class="card" id="detail-card"></div>
 
 <script>
-    let currentRating = 0; // 当前评分
-    let sceneId = 0;       // 当前景点ID
+    let currentRating = 0;
+    let sceneId = 0;
+    let isLiked = false;
 
     async function loadDetail() {
         const params = new URLSearchParams(window.location.search);
         sceneId = params.get('id');
-
-        if (!sceneId) {
-            alert("缺少景点ID");
-            return;
-        }
-
+        if (!sceneId) { alert("缺少景点ID"); return; }
         const token = localStorage.getItem('token');
+
         try {
             const res = await fetch(`/api/scene/${sceneId}`, {
-                headers: {
-                    'Authorization': `${token}`
-                }
+                headers: { 'Authorization': token }
             });
             const data = await res.json();
-
-            if (data.code !== 0) {
-                alert("获取景点详情失败");
-                return;
-            }
+            if (data.code !== 0) { alert("获取详情失败"); return; }
 
             const scene = data.scene;
             const score = data.score;
             currentRating = score ? score.score : 0;
+            isLiked = score ? score.is_like : false;
 
             document.getElementById('detail-card').innerHTML = `
                 <img src="${scene.image}" alt="${scene.name}">
                 <div class="card-content">
-                    <h2>${scene.name}</h2>
+                    <h2>
+                        <span>${scene.name}</span>
+                        <span id="like-icon" class="like-button ${isLiked ? 'liked' : ''}" onclick="toggleLike()">👍🏻</span>
+                    </h2>
                     <p><strong>省份：</strong>${scene.province}</p>
                     <p><strong>城市：</strong>${scene.city}</p>
                     <p><strong>价格：</strong>${scene.price}</p>
                     <p><strong>浏览量：</strong>${scene.views}</p>
                     <p><strong>点赞数：</strong>${scene.goods}</p>
-                    ${score ? `<div class="rating">你的评分：${score.score}</div>` : `<p style="color:#888;">你还未评分</p>`}
+                    <div class="rating" id="rating-display">
+                        ${score ? `你的评分：${score.score}` : `你还未评分`}
+                    </div>
                     <div class="stars" id="stars-container"></div>
                     <button class="submit-btn" onclick="submitRating()">提交评分</button>
                 </div>
             `;
 
-            renderStars(currentRating); // 显示评分星星
-            bindStars(); // 添加点击事件
-
-        } catch (err) {
-            alert("网络异常，无法加载详情");
+            renderStars(currentRating);
+            bindStars();
+        } catch (e) {
+            alert("网络异常，加载失败");
         }
     }
 
     function renderStars(rating) {
-        const starsContainer = document.getElementById('stars-container');
-        starsContainer.innerHTML = '';
+        const container = document.getElementById('stars-container');
+        container.innerHTML = '';
         for (let i = 1; i <= 5; i++) {
-            const star = document.createElement('span');
-            star.className = 'star';
-            star.innerHTML = '★';
-            star.dataset.index = i;
-            if (i <= rating) {
-                star.classList.add('active');
-            }
-            starsContainer.appendChild(star);
+            const span = document.createElement('span');
+            span.className = 'star' + (i <= rating ? ' active' : '');
+            span.textContent = '★';
+            span.dataset.index = i;
+            container.appendChild(span);
         }
     }
 
     function bindStars() {
-        const stars = document.querySelectorAll('.star');
-        stars.forEach(star => {
-            star.addEventListener('click', () => {
-                const val = parseInt(star.dataset.index);
-                currentRating = val;
+        document.querySelectorAll('.star').forEach(star => {
+            star.onclick = () => {
+                currentRating = +star.dataset.index;
                 renderStars(currentRating);
-                bindStars(); // 重新绑定事件（每次渲染后都需要）
-            });
+                bindStars();
+            };
         });
     }
 
     async function submitRating() {
-        if (currentRating === 0) {
-            alert('请先选择评分');
-            return;
-        }
-
+        if (!currentRating) { alert('请选择评分'); return; }
         const token = localStorage.getItem('token');
-        const rating = {
-            score: currentRating,
-            score_type: 1,
-            scene_id: parseInt(sceneId)
-        };
+        const body = { scene_id: +sceneId, score: currentRating, score_type: 1 };
 
         try {
-            const res = await fetch(`/api/score`, {
+            const res = await fetch('/api/score', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(rating)
+                headers: { 'Authorization': token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
             });
-            const data = await res.json();
+            const d = await res.json();
+            if (d.code === 0) {
+                alert('评分成功');
+                document.getElementById('rating-display').textContent = `你的评分：${currentRating}`;
+            } else alert('评分失败：' + d.msg);
+        } catch {
+            alert('网络异常，评分失败');
+        }
+    }
 
-            if (data.code === 0) {
-                alert("评分成功！");
-                loadDetail(); // 刷新数据并重新显示评分星星
-            } else {
-                alert("评分失败：" + data.msg);
+    async function toggleLike() {
+        isLiked = !isLiked;
+        document.getElementById('like-icon').classList.toggle('liked', isLiked);
+
+        const token = localStorage.getItem('token');
+        const body = { scene_id: +sceneId, score_type: 1, is_like: isLiked };
+
+        try {
+            const res = await fetch('/api/score/like', {
+                method: 'POST',
+                headers: { 'Authorization': token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const d = await res.json();
+            if (d.code !== 0) {
+                alert('点赞失败：' + d.msg);
+                // 回滚 UI 状态
+                isLiked = !isLiked;
+                document.getElementById('like-icon').classList.toggle('liked', isLiked);
             }
-        } catch (err) {
-            alert("网络异常，评分失败");
+        } catch {
+            alert('网络异常，点赞失败');
+            isLiked = !isLiked;
+            document.getElementById('like-icon').classList.toggle('liked', isLiked);
         }
     }
 

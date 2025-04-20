@@ -15,6 +15,7 @@ type Score struct {
 	ScoreTime  time.Time `gorm:"not null" json:"score_time"`
 	ScoreDesc  string    `json:"score_desc"`
 	ScoreState int       `json:"score_state"`
+	IsLike     bool      `json:"is_like"`
 }
 
 func AddScore(rating Score) bool {
